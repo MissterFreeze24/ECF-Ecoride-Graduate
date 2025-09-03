@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>EcoRide - Covoiturage Écologique</title>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+</head>
+<body class="bg-gray-100 text-gray-900 font-sans">
+
+  <!-- HEADER -->
+  <header class="bg-green-700 text-white p-4 flex justify-between items-center sticky top-0 z-50">
+    <h1 class="text-xl font-bold">EcoRide</h1>
+    <nav class="space-x-4">
+      <button onclick="showPage('accueil')" class="hover:underline">Accueil</button>
+      <button onclick="showPage('trajets')" class="hover:underline">Covoiturages</button>
+      <button onclick="showPage('inscription')" class="hover:underline">Connexion</button>
+      <button onclick="showPage('historique')" class="hover:underline">Historique</button>
+      <button onclick="showPage('ajoutTrajet')" class="hover:underline">Proposer un trajet</button>
+      <button onclick="showPage('compte')" class="hover:underline">Mon compte</button>
+      <button onclick="showPage('messagerie')" class="hover:underline">Messagerie</button>
+      <button onclick="showPage('admin')" class="hover:underline">Admin</button>
+    </nav>
+  </header>
+
+  <main class="p-4 max-w-3xl mx-auto">
+    <!-- US1 Accueil -->
+    <section id="page-accueil" class="block">
+      <h2 class="text-3xl font-bold mb-4 text-center">Bienvenue sur EcoRide 🌱</h2>
+      <form id="form-recherche" class="bg-white p-4 rounded shadow mb-6">
+        <label class="block mb-2">Ville de départ</label>
+        <input type="text" id="depart" class="w-full border rounded px-3 py-2 mb-3"/>
+        <label class="block mb-2">Ville d’arrivée</label>
+        <input type="text" id="arrivee" class="w-full border rounded px-3 py-2 mb-3"/>
+        <label class="block mb-2">Date</label>
+        <input type="date" id="date" class="w-full border rounded px-3 py-2 mb-4"/>
+        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded w-full">Rechercher</button>
+      </form>
+    </section>
+
+    <!-- US2 Liste trajets -->
+    <section id="page-trajets" class="hidden">
+      <nav class="flex flex-wrap justify-center gap-2 mb-4">
+        <button data-tri="prix" class="bg-green-600 text-white py-2 px-3 rounded">Trier par prix</button>
+        <button data-tri="heure" class="bg-green-600 text-white py-2 px-3 rounded">Trier par heure</button>
+        <button id="btn-retour" class="bg-red-600 text-white py-2 px-3 rounded">Retour</button>
+      </nav>
+      <div id="map" class="w-full h-64 rounded shadow-md mb-4"></div>
+      <div id="liste-trajets" class="space-y-4"></div>
+      <div id="msg-trajets" class="text-center text-red-600 mt-4 hidden"></div>
+    </section>
+
+    <!-- US3 Inscription -->
+    <section id="page-inscription" class="hidden">
+      <h2 class="text-2xl font-bold mb-4 text-center">Inscription</h2>
+      <form id="form-inscription" class="bg-white p-6 rounded shadow max-w-md mx-auto">
+        <div class="text-red-600 mb-4" id="error-msg"></div>
+        <input type="text" id="nom" placeholder="Nom complet" class="w-full border rounded px-3 py-2 mb-3"/>
+        <input type="email" id="email" placeholder="E-mail" class="w-full border rounded px-3 py-2 mb-3"/>
+        <input type="password" id="motdepasse" placeholder="Mot de passe" class="w-full border rounded px-3 py-2 mb-4"/>
+        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded w-full">S'inscrire</button>
+      </form>
+    </section>
+
+    <!-- US5/6 Détail -->
+    <section id="page-detail" class="hidden">
+      <button id="btn-retour-detail" class="mb-4 bg-red-600 text-white px-3 py-2 rounded">Retour</button>
+      <div id="detail-contenu" class="bg-white p-6 rounded shadow"></div>
+    </section>
+
+    <!-- US7/8 Historique -->
+    <section id="page-historique" class="hidden">
+      <h2 class="text-2xl font-bold mb-4 text-center">Mon historique</h2>
+      <div id="liste-historique" class="space-y-4"></div>
+      <p id="msg-historique" class="text-center text-gray-500 mt-4">Aucune réservation pour le moment.</p>
+    </section>
+
+    <!-- US9 Ajout covoiturage -->
+    <section id="page-ajoutTrajet" class="hidden">
+      <h2 class="text-2xl font-bold mb-4 text-center">Proposer un trajet</h2>
+      <form id="form-ajout-trajet" class="bg-white p-6 rounded shadow">
+        <input type="text" id="ajout-chauffeur" placeholder="Nom chauffeur" class="w-full border px-3 py-2 mb-3"/>
+        <input type="text" id="ajout-depart" placeholder="Ville de départ" class="w-full border px-3 py-2 mb-3"/>
+        <input type="text" id="ajout-arrivee" placeholder="Ville d’arrivée" class="w-full border px-3 py-2 mb-3"/>
+        <input type="date" id="ajout-date" class="w-full border px-3 py-2 mb-3"/>
+        <input type="time" id="ajout-heureDep" class="w-full border px-3 py-2 mb-3"/>
+        <input type="time" id="ajout-heureArr" class="w-full border px-3 py-2 mb-3"/>
+        <input type="number" id="ajout-prix" placeholder="Prix (€)" class="w-full border px-3 py-2 mb-3"/>
+        <input type="number" id="ajout-places" placeholder="Places disponibles" class="w-full border px-3 py-2 mb-3"/>
+        <input type="text" id="ajout-vehicule" placeholder="Véhicule (marque modèle énergie)" class="w-full border px-3 py-2 mb-3"/>
+        <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded w-full">Ajouter le trajet</button>
+      </form>
+    </section>
+
+    <!-- US10 Compte -->
+    <section id="page-compte" class="hidden">
+      <h2 class="text-2xl font-bold mb-4 text-center">Mon compte</h2>
+      <div class="bg-white p-6 rounded shadow">
+        <p><strong>Nom :</strong> <span id="compte-nom">Jean Dupont</span></p>
+        <p><strong>Email :</strong> <span id="compte-email">jean.dupont@mail.com</span></p>
+        <h3 class="mt-4 font-semibold">Changer de mot de passe</h3>
+        <input type="password" id="new-password" placeholder="Nouveau mot de passe" class="w-full border px-3 py-2 mb-3"/>
+        <button id="btn-change-pass" class="bg-blue-600 text-white px-4 py-2 rounded">Mettre à jour</button>
+        <p id="msg-compte" class="mt-2 text-green-600 hidden">Mot de passe modifié ✅</p>
+        <button id="btn-deconnexion" class="mt-4 bg-red-600 text-white px-4 py-2 rounded">Déconnexion</button>
+      </div>
+    </section>
+
+    <!-- US12 Messagerie -->
+    <section id="page-messagerie" class="hidden">
+      <h2 class="text-2xl font-bold mb-4 text-center">Messagerie</h2>
+      <div id="messages" class="bg-white p-4 rounded shadow h-64 overflow-y-auto mb-3"></div>
+      <input type="text" id="input-message" placeholder="Écrire un message..." class="w-full border px-3 py-2 mb-2"/>
+      <button id="btn-envoyer" class="bg-green-600 text-white px-4 py-2 rounded w-full">Envoyer</button>
+    </section>
+
+    <!-- US13 Admin -->
+    <section id="page-admin" class="hidden">
+      <h2 class="text-2xl font-bold mb-4 text-center">Administration</h2>
+      <h3 class="font-semibold">Utilisateurs</h3>
+      <ul id="liste-users" class="mb-4"></ul>
+      <h3 class="font-semibold">Trajets</h3>
+      <ul id="liste-trajets-admin"></ul>
+    </section>
+  </main>
+
+  <footer class="bg-gray-800 text-white p-4 text-center mt-6">
+    <p>© EcoRide - contact@ecoride.fr</p>
+  </footer>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    // Gestion des pages
+    const pages = {
+      accueil: document.getElementById('page-accueil'),
+      trajets: document.getElementById('page-trajets'),
+      inscription: document.getElementById('page-inscription'),
+      detail: document.getElementById('page-detail'),
+      historique: document.getElementById('page-historique'),
+      ajoutTrajet: document.getElementById('page-ajoutTrajet'),
+      compte: document.getElementById('page-compte'),
+      messagerie: document.getElementById('page-messagerie'),
+      admin: document.getElementById('page-admin')
+    };
+    function showPage(pageName) {
+      for (const p in pages) pages[p].classList.add('hidden');
+      pages[pageName].classList.remove('hidden');
+    }
+
+    // Données
+    let trajetsData = [
+      { id: 1, chauffeur: "Alice", note: 4.8, depart: "Paris", arrivee: "Versailles", prix: 15, places: 2, date: "2025-08-20", heureDep: "08:00", heureArr: "08:45", vehicule: {marque: "Tesla", modele: "Model 3", energie: "Électrique"}, avis: [] },
+      { id: 2, chauffeur: "Bob", note: 4.2, depart: "Paris", arrivee: "Fontainebleau", prix: 20, places: 1, date: "2025-08-21", heureDep: "09:30", heureArr: "10:30", vehicule: {marque: "Renault", modele: "Clio", energie: "Diesel"}, avis: [] }
+    ];
+    let reservations = [];
+    let messages = [];
+    let users = [{nom:"Jean Dupont", email:"jean.dupont@mail.com"}];
+
+    // Recherche
+    document.getElementById('form-recherche').addEventListener('submit', (e) => {
+      e.preventDefault(); showPage('trajets'); afficherResultats(trajetsData); initMap();
+    });
+    function afficherResultats(resultats) {
+      const liste = document.getElementById('liste-trajets'); liste.innerHTML = '';
+      resultats.forEach(t => {
+        const div = document.createElement('div'); div.className = 'bg-white p-4 rounded shadow';
+        div.innerHTML = `
+          <p><strong>${t.depart} → ${t.arrivee}</strong></p>
+          <p>👤 ${t.chauffeur} ⭐ ${t.note.toFixed(1)}</p>
+          <p>📅 ${t.date} | ⏰ ${t.heureDep} → ${t.heureArr}</p>
+          <p>💰 ${t.prix} € | 🚗 Places : ${t.places}</p>
+          <button class="btn-detail bg-green-600 text-white px-3 py-1 mt-2 rounded" data-id="${t.id}">Détail</button>
+        `; liste.appendChild(div);
+      });
+    }
+
+    // Détail
+    document.addEventListener('click', (e) => {
+      if (e.target.classList.contains('btn-detail')) {
+        const id = parseInt(e.target.dataset.id); const trajet = trajetsData.find(t=>t.id===id);
+        afficherDetail(trajet);
+      }
+    });
+    function afficherDetail(trajet) {
+      const detail = document.getElementById('detail-contenu');
+      detail.innerHTML = `
+        <p><strong>${trajet.depart} → ${trajet.arrivee}</strong></p>
+        <p>👤 ${trajet.chauffeur} ⭐ ${trajet.note.toFixed(1)}</p>
+        <p>📅 ${trajet.date} | ⏰ ${trajet.heureDep} → ${trajet.heureArr}</p>
+        <p>💰 ${trajet.prix} € | 🚗 Places : <span id="places-restantes">${trajet.places}</span></p>
+        <h4 class="font-semibold mt-2">Avis :</h4>
+        <ul>${trajet.avis.map(a=>`<li>${a}</li>`).join('')}</ul>
+        <div id="msg-reservation" class="mt-2"></div>
+        <button id="btn-reserver" class="bg-blue-600 text-white px-3 py-1 mt-2 rounded">Réserver</button>
+      `;
+      document.getElementById('btn-reserver').onclick = () => {
+        if (trajet.places > 0) {
+          trajet.places--; document.getElementById('places-restantes').textContent = trajet.places;
+          document.getElementById('msg-reservation').textContent = "✅ Réservation confirmée";
+          reservations.push({...trajet});
+          majHistorique();
+        } else document.getElementById('msg-reservation').textContent = "❌ Plus de places";
+      };
+      showPage('detail');
+    }
+
+    // Historique + annulation + note (US7/8/11)
+    function majHistorique() {
+      const cont = document.getElementById('liste-historique'); const msg = document.getElementById('msg-historique');
+      cont.innerHTML = '';
+      if (reservations.length===0) {msg.classList.remove('hidden'); return;} msg.classList.add('hidden');
+      reservations.forEach((r,i)=>{
+        const div = document.createElement('div'); div.className='bg-white p-4 rounded shadow';
+        div.innerHTML=`
+          <p><strong>${r.depart} → ${r.arrivee}</strong></p>
+          <p>👤 ${r.chauffeur}</p>
+          <p>📅 ${r.date} | ⏰ ${r.heureDep} → ${r.heureArr}</p>
+          <p>💰 ${r.prix} €</p>
+          <button class="btn-annuler bg-red-600 text-white px-3 py-1 mt-2 rounded" data-index="${i}">Annuler</button>
+          <h4 class="mt-2 font-semibold">Noter le conducteur</h4>
+          <input type="number" min="1" max="5" id="note-${i}" class="border px-2 py-1 w-20"/>
+          <input type="text" id="avis-${i}" placeholder="Votre avis" class="border px-2 py-1 w-full mt-1"/>
+          <button class="btn-avis bg-green-600 text-white px-3 py-1 mt-2 rounded" data-index="${i}">Envoyer</button>
+        `; cont.appendChild(div);
+      });
+    }
+    document.addEventListener('click', (e)=>{
+      if (e.target.classList.contains('btn-annuler')) {
+        const i = e.target.dataset.index; const trajetAnnule=reservations[i]; 
+        const trajetOriginal=trajetsData.find(t=>t.id===trajetAnnule.id); if(trajetOriginal) trajetOriginal.places++;
+        reservations.splice(i,1); majHistorique();
+      }
+      if (e.target.classList.contains('btn-avis')) {
+        const i = e.target.dataset.index;
+        const note=parseInt(document.getElementById('note-'+i).value);
+        const avis=document.getElementById('avis-'+i).value;
+        const trajet=trajetsData.find(t=>t.id===reservations[i].id);
+        if(trajet){trajet.avis.push("⭐"+note+" - "+avis);}
+        majHistorique();
+      }
+    });
+
+    // Ajout covoiturage (US9)
+    document.getElementById('form-ajout-trajet').addEventListener('submit',(e)=>{
+      e.preventDefault();
+      const nv={id:Date.now(), chauffeur:document.getElementById('ajout-chauffeur').value, note:5, depart:document.getElementById('ajout-depart').value, arrivee:document.getElementById('ajout-arrivee').value, date:document.getElementById('ajout-date').value, heureDep:document.getElementById('ajout-heureDep').value, heureArr:document.getElementById('ajout-heureArr').value, prix:parseFloat(document.getElementById('ajout-prix').value), places:parseInt(document.getElementById('ajout-places').value), vehicule:{marque:document.getElementById('ajout-vehicule').value, modele:"", energie:""}, avis:[]};
+      trajetsData.push(nv); alert("Trajet ajouté !"); showPage('trajets'); afficherResultats(trajetsData);
+    });
+
+    // Compte + déconnexion (US10/14)
+    document.getElementById('btn-change-pass').addEventListener('click',()=>{document.getElementById('msg-compte').classList.remove('hidden');});
+    document.getElementById('btn-deconnexion').addEventListener('click',()=>{reservations=[]; majHistorique(); showPage('accueil');});
+
+    // Messagerie (US12)
+    document.getElementById('btn-envoyer').addEventListener('click',()=>{
+      const txt=document.getElementById('input-message').value; if(!txt) return;
+      messages.push("Moi: "+txt); majMessages(); document.getElementById('input-message').value="";
+    });
+    function majMessages(){
+      const box=document.getElementById('messages'); box.innerHTML=messages.map(m=>`<p>${m}</p>`).join('');
+    }
+
+    // Admin (US13)
+    function majAdmin(){
+      const ulUsers=document.getElementById('liste-users'); ulUsers.innerHTML='';
+      users.forEach((u,i)=>{ulUsers.innerHTML+=`<li>${u.nom} - ${u.email} <button class="delUser bg-red-600 text-white px-2" data-i="${i}">X</button></li>`;});
+      const ulTrajets=document.getElementById('liste-trajets-admin'); ulTrajets.innerHTML='';
+      trajetsData.forEach((t,i)=>{ulTrajets.innerHTML+=`<li>${t.depart}→${t.arrivee} (${t.chauffeur}) <button class="delTrajet bg-red-600 text-white px-2" data-i="${i}">X</button></li>`;});
+    }
+    document.addEventListener('click',(e)=>{
+      if(e.target.classList.contains('delUser')){users.splice(e.target.dataset.i,1); majAdmin();}
+      if(e.target.classList.contains('delTrajet')){trajetsData.splice(e.target.dataset.i,1); majAdmin();}
+    });
+    document.querySelector('button[onclick="showPage(\'admin\')"]').addEventListener('click', majAdmin);
+
+    // Leaflet
+    let mapInit=false;
+    function initMap(){ if(mapInit) return;
+      const map=L.map('map').setView([48.8566,2.3522],10);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+      mapInit=true;
+    }
+  </script>
+</body>
+</html>
+
