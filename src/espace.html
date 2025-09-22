@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mon espace - EcoRide</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <div class="container-fluid">
+    <a class="navbar-brand text-success fw-bold" href="index.html">EcoRide</a>
+  </div>
+</nav>
+<div class="container my-5">
+  <h1>Mon espace</h1>
+  <ul class="nav nav-tabs" id="spaceTabs">
+    <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#mesvoyages">Mes voyages</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#creervoyage">Créer un voyage</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#mescredits">Mes crédits</a></li>
+  </ul>
+  <div class="tab-content mt-3">
+    <div class="tab-pane fade show active" id="mesvoyages">
+      <div id="mes-voyages-list"></div>
+    </div>
+    <div class="tab-pane fade" id="creervoyage">
+      <h3>Créer un voyage</h3>
+      <input class="form-control mb-2" id="cv-depart" placeholder="Ville de départ">
+      <input class="form-control mb-2" id="cv-arrivee" placeholder="Ville d'arrivée">
+      <input type="date" class="form-control mb-2" id="cv-date">
+      <input type="time" class="form-control mb-2" id="cv-time-depart">
+      <input type="number" class="form-control mb-2" id="cv-places" placeholder="Places">
+      <input type="number" class="form-control mb-2" id="cv-prix" placeholder="Prix (€)">
+      <button class="btn btn-success" onclick="createRide()">Créer</button>
+    </div>
+    <div class="tab-pane fade" id="mescredits">
+      <h3>Mes crédits</h3>
+      <p id="credits-amount">Chargement...</p>
+    </div>
+  </div>
+</div>
+<script src="js/app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
